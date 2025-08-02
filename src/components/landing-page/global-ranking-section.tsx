@@ -41,6 +41,19 @@ export function GlobalRankingSection() {
     }
   };
 
+  const getPodiumStyle = (index: number) => {
+    switch (index) {
+      case 0:
+        return 'bg-gradient-to-br from-yellow-400/30 to-yellow-600/30 border-yellow-400/50 border-2 transform md:-translate-y-2';
+      case 1:
+        return 'bg-gradient-to-br from-gray-300/30 to-gray-500/30 border-gray-400/50 border-2';
+      case 2:
+        return 'bg-gradient-to-br from-amber-400/30 to-amber-600/30 border-amber-400/50 border-2';
+      default:
+        return '';
+    }
+  };
+
   const currentRanking = gameRankings[activeTab] || [];
   const activeGame = gameTabs.find(tab => tab.id === activeTab);
 
@@ -88,12 +101,7 @@ export function GlobalRankingSection() {
               {currentRanking.slice(0, 3).map((player, index) => (
                 <div
                   key={player.rank}
-                  className={`text-center p-4 rounded-xl ${index === 0
-                    ? 'bg-gradient-to-br from-yellow-400/30 to-yellow-600/30 border-yellow-400/50 border-2 transform md:-translate-y-2'
-                    : index === 1
-                      ? 'bg-gradient-to-br from-gray-300/30 to-gray-500/30 border-gray-400/50 border-2'
-                      : 'bg-gradient-to-br from-amber-400/30 to-amber-600/30 border-amber-400/50 border-2'
-                    }`}
+                  className={`text-center p-4 rounded-xl ${getPodiumStyle(index)}`}
                 >
                   <div className="text-4xl mb-2">{player.avatar}</div>
                   <div className="flex items-center justify-center mb-2">
