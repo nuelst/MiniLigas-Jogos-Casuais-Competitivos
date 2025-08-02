@@ -12,9 +12,9 @@ export function Header() {
           <nav className="hidden md:flex items-center space-x-6">
             <a href="#jogos" className="text-white/80 hover:text-white transition-colors">Jogos</a>
             <a href="#rankings" className="text-white/80 hover:text-white transition-colors">Rankings</a>
-            <button className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition-colors">
+            <a href="/login" className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition-colors">
               Login
-            </button>
+            </a>
           </nav>
         </div>
       </div>
