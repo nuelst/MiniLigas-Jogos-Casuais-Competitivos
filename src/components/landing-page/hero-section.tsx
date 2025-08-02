@@ -18,9 +18,9 @@ export function HeroSection() {
             <Play className="inline-block mr-2 h-5 w-5" />
             Começar a Jogar
           </button>
-          <button className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-lg font-bold text-lg transition-all">
+          <a href="#rankings" className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-lg font-bold text-lg transition-all block">
             Ver Rankings
-          </button>
+          </a>
         </div>
       </div>
     </section>
