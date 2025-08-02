@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowLeft, Calendar, KeyRound, Mail, User, UserPlus, Users } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 
 //TODO: improve form validation with zod and add react-hook-form
@@ -172,13 +173,13 @@ export function RegisterForm() {
       <div className="mt-6 text-center">
         <p className="text-white/70 mb-4">
           Já tem uma conta?{' '}
-          <a href="/login" className="text-yellow-400 hover:text-yellow-300 font-semibold">
+          <Link href="/login" className="text-yellow-400 hover:text-yellow-300 font-semibold">
             Faça login
-          </a>
+          </Link>
         </p>
-        <a href="/" className="text-white/50 hover:text-white/70 text-sm flex items-center justify-center">
+        <Link href="/" className="text-white/50 hover:text-white/70 text-sm flex items-center justify-center">
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao início
-        </a>
+        </Link>
       </div>
     </div>
   );
