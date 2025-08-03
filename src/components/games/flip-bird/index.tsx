@@ -333,7 +333,7 @@ export function FlipBird() {
         });
 
         gapsGroup.children.iterate((child: any) => {
-          if (child instanceof Phaser.Physics.Arcade.Sprite && child.body) {
+          if (child && child.body) {
             (child.body as Phaser.Physics.Arcade.Body).setVelocityX(-100);
           }
           return true;
