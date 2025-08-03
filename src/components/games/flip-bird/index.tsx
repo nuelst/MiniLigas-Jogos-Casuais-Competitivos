@@ -346,7 +346,7 @@ export function FlipBird() {
         }
       };
 
-      const hitBird = function (this: Phaser.Scene, _object1: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, _object2: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile) {
+      const hitBird = function (this: Phaser.Scene) {
         this.physics.pause();
 
         gameOver = true;
