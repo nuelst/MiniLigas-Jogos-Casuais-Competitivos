@@ -321,7 +321,7 @@ export function FlipBird() {
           }
         }
 
-        pipesGroup.children.iterate((child: any) => {
+        pipesGroup.children.iterate((child: Phaser.GameObjects.GameObject) => {
           if (child == undefined || !(child instanceof Phaser.Physics.Arcade.Sprite)) return true;
 
           if (child.x < -50) {
@@ -332,7 +332,7 @@ export function FlipBird() {
           return true;
         });
 
-        gapsGroup.children.iterate((child: any) => {
+        gapsGroup.children.iterate((child: Phaser.GameObjects.GameObject) => {
           if (child && child.body) {
             (child.body as Phaser.Physics.Arcade.Body).setVelocityX(-100);
           }
@@ -346,7 +346,7 @@ export function FlipBird() {
         }
       };
 
-      const hitBird = function (this: Phaser.Scene, object1: any, object2: any) {
+      const hitBird = function (this: Phaser.Scene, _object1: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, _object2: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile) {
         this.physics.pause();
 
         gameOver = true;
@@ -361,9 +361,9 @@ export function FlipBird() {
         restartButton.visible = true;
       };
 
-      const updateScore = function (_: any, gap: any) {
+      const updateScore = function (_: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile, gap: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile) {
         score++;
-        if (gap && gap.destroy) {
+        if (gap && 'destroy' in gap && typeof gap.destroy === 'function') {
           gap.destroy();
         }
 
