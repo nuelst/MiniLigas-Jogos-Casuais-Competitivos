@@ -9,11 +9,11 @@ export default function LoginPage() {
 
       <div className="text-center mb-8">
         <div className="flex items-center justify-center space-x-2 mb-4">
-          <GamepadIcon className="h-12 w-12 text-yellow-400" />
-          <h1 className="text-3xl font-bold text-white">MiniLigas</h1>
+          <GamepadIcon className="h-12 w-12 text-primary" />
+          <h1 className="text-3xl font-bold text-foreground">MiniLigas</h1>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta!</h2>
-        <p className="text-white/70">Entre na sua conta para continuar jogando</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo de volta!</h2>
+        <p className="text-muted-foreground">Entre na sua conta para continuar jogando</p>
       </div>
 
       <LoginForm />

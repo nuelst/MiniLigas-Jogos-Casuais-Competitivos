@@ -1,183 +1,207 @@
 'use client';
 
-import { ArrowLeft, Calendar, KeyRound, Mail, User, UserPlus, Users } from 'lucide-react';
+import { registerSchema, type RegisterData } from '@/lib/validations';
+import { useAuthStore } from '@/store/auth';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle, ArrowLeft, CheckCircle, KeyRound, Loader2, Mail, User, UserPlus, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
-//TODO: improve form validation with zod and add react-hook-form
 export function RegisterForm() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    username: '',
-    age: '',
-    gender: ''
+  const router = useRouter();
+  const { signUp, loading, error, clearError } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<RegisterData>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const onSubmit = async (data: RegisterData) => {
+    clearError();
+    setSuccess(false);
+
+    const result = await signUp({
+      email: data.email,
+      password: data.password,
+      username: data.username,
+      name: data.name,
+    });
+
+    if (result.success) {
+      setSuccess(true);
+      // Redirecionar para página de confirmação de email ou login
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } else {
+      setError('root', { message: result.error });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Register data:', formData);
-
-  };
+  if (success) {
+    return (
+      <div className="bg-card/10 backdrop-blur-sm rounded-xl p-8 border border-border text-center">
+        <div className="mb-6">
+          <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">Conta criada com sucesso!</h2>
+          <p className="text-muted-foreground">
+            Verifique seu email para ativar sua conta.
+            <br />
+            Redirecionando para o login...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="bg-card/10 backdrop-blur-sm rounded-xl p-8 border border-border">
+      {(error || errors.root) && (
+        <div className="mb-6 p-4 bg-destructive/20 border border-destructive/30 rounded-lg flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+          <p className="text-destructive text-sm">
+            {error || errors.root?.message}
+          </p>
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Nome Completo */}
         <div>
-          <label htmlFor="name" className="block text-white font-medium mb-2">
+          <label htmlFor="name" className="block text-foreground font-medium mb-2">
             Nome Completo
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
               id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+              {...register('name')}
+              className={`w-full bg-input border rounded-lg px-12 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all ${errors.name
+                ? 'border-destructive focus:ring-destructive'
+                : 'border-border focus:ring-primary'
+                }`}
               placeholder="Digite seu nome completo"
-              required
             />
           </div>
+          {errors.name && (
+            <p className="mt-1 text-destructive text-sm">{errors.name.message}</p>
+          )}
         </div>
 
-
+        {/* Nome de Usuário */}
         <div>
-          <label htmlFor="username" className="block text-white font-medium mb-2">
+          <label htmlFor="username" className="block text-foreground font-medium mb-2">
             Nome de Usuário
           </label>
           <div className="relative">
-            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
+            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
               id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+              {...register('username')}
+              className={`w-full bg-input border rounded-lg px-12 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all ${errors.username
+                ? 'border-destructive focus:ring-destructive'
+                : 'border-border focus:ring-primary'
+                }`}
               placeholder="Digite seu nome de usuário"
-              required
             />
           </div>
+          {errors.username && (
+            <p className="mt-1 text-destructive text-sm">{errors.username.message}</p>
+          )}
         </div>
 
-
+        {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-white font-medium mb-2">
+          <label htmlFor="email" className="block text-foreground font-medium mb-2">
             Email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="email"
               id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+              {...register('email')}
+              className={`w-full bg-input border rounded-lg px-12 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all ${errors.email
+                ? 'border-destructive focus:ring-destructive'
+                : 'border-border focus:ring-primary'
+                }`}
               placeholder="Digite seu email"
-              required
             />
           </div>
+          {errors.email && (
+            <p className="mt-1 text-destructive text-sm">{errors.email.message}</p>
+          )}
         </div>
 
-
+        {/* Senha */}
         <div>
-          <label htmlFor="password" className="block text-white font-medium mb-2">
+          <label htmlFor="password" className="block text-foreground font-medium mb-2">
             Senha
           </label>
           <div className="relative">
-            <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
+            <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+              {...register('password')}
+              className={`w-full bg-input border rounded-lg px-12 pr-12 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all ${errors.password
+                ? 'border-destructive focus:ring-destructive'
+                : 'border-border focus:ring-primary'
+                }`}
               placeholder="Digite sua senha"
-              required
-              minLength={6}
             />
-          </div>
-        </div>
-
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <div>
-            <label htmlFor="age" className="block text-white font-medium mb-2">
-              Idade
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/50" />
-              <input
-                type="number"
-                id="age"
-                name="age"
-                value={formData.age}
-                onChange={handleInputChange}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-12 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                placeholder="Idade"
-                min="13"
-                max="120"
-                required
-              />
-            </div>
-          </div>
-
-
-          <div>
-            <label htmlFor="gender" className="block text-white font-medium mb-2">
-              Gênero
-            </label>
-            <select
-              id="gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleInputChange}
-              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-              required
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <option value="" className="bg-gray-800 text-white">Selecione</option>
-              <option value="masculino" className="bg-gray-800 text-white">Masculino</option>
-              <option value="feminino" className="bg-gray-800 text-white">Feminino</option>
-              <option value="outro" className="bg-gray-800 text-white">Outro</option>
-              <option value="prefiro-nao-informar" className="bg-gray-800 text-white">Prefiro não informar</option>
-            </select>
+              {showPassword ? '🙈' : '👁️'}
+            </button>
           </div>
+          {errors.password && (
+            <p className="mt-1 text-destructive text-sm">{errors.password.message}</p>
+          )}
         </div>
 
-
+        {/* Botão de Submit */}
         <button
           type="submit"
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center justify-center space-x-2"
+          disabled={isSubmitting || loading}
+          className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-primary-foreground px-6 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center space-x-2"
         >
-          <UserPlus className="h-5 w-5" />
-          <span>Criar Conta</span>
+          {isSubmitting || loading ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Criando conta...</span>
+            </>
+          ) : (
+            <>
+              <UserPlus className="h-5 w-5" />
+              <span>Criar Conta</span>
+            </>
+          )}
         </button>
       </form>
 
-
+      {/* Links de navegação */}
       <div className="mt-6 text-center">
-        <p className="text-white/70 mb-4">
+        <p className="text-muted-foreground mb-4">
           Já tem uma conta?{' '}
-          <Link href="/login" className="text-yellow-400 hover:text-yellow-300 font-semibold">
+          <Link href="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">
             Faça login
           </Link>
         </p>
-        <Link href="/" className="text-white/50 hover:text-white/70 text-sm flex items-center justify-center">
+        <Link href="/" className="text-muted-foreground hover:text-foreground text-sm flex items-center justify-center transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar ao início
         </Link>
       </div>

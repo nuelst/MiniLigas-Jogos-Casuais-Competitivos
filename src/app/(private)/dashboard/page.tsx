@@ -1,7 +1,6 @@
 'use client';
 
 import { GamesDistributionChart } from "@/components/dashboard/games-distribution-chart";
-
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { gameRankings } from "@/shared/mocks/ranking";
-import { getDashboardStats, getGameStats, getPlayersSummary } from "@/shared/utils/dashboard";
-import { useState } from "react";
+import { getDashboardStatsFromDB, getGameStatsFromDB, getPlayersSummaryFromDB } from "@/lib/dashboard-api";
+import { getRankings } from "@/shared/utils/gameAPI";
+import type { DashboardStats, GameStats, PlayerSummary } from "@/types/dashboard";
+import type { Ranking } from "@/types/database";
+import { useEffect, useState } from "react";
 
 function getRankEmoji(rank: number): string {
   if (rank === 1) return '🏆';
@@ -29,33 +30,83 @@ function getGameStatusBadge(rank: number): { variant: "default" | "secondary" | 
 export default function DashboardPage() {
   const [selectedGame, setSelectedGame] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [loading, setLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [gameStats, setGameStats] = useState<GameStats[]>([]);
+  const [playersSummary, setPlayersSummary] = useState<PlayerSummary[]>([]);
+  const [currentGameRanking, setCurrentGameRanking] = useState<Ranking[]>([]);
   const itemsPerPage = 5;
 
-  const dashboardStats = getDashboardStats();
-  const gameStats = getGameStats();
-  const playersSummary = getPlayersSummary();
 
-  const currentGameRanking = selectedGame === 'all'
-    ? []
-    : gameRankings[selectedGame] || [];
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
+        const [stats, games, players] = await Promise.all([
+          getDashboardStatsFromDB(),
+          getGameStatsFromDB(),
+          getPlayersSummaryFromDB()
+        ]);
 
-  // Reset pagination when changing games
+        setDashboardStats(stats);
+        setGameStats(games);
+        setPlayersSummary(players);
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
+
+  useEffect(() => {
+    async function loadGameRankings() {
+      if (selectedGame === 'all') {
+        setCurrentGameRanking([]);
+        return;
+      }
+
+      try {
+        const rankings = await getRankings(selectedGame);
+        setCurrentGameRanking(rankings);
+      } catch (error) {
+        console.error('Erro ao carregar rankings do jogo:', error);
+        setCurrentGameRanking([]);
+      }
+    }
+
+    loadGameRankings();
+  }, [selectedGame]);
+
+
   const handleGameChange = (value: string) => {
     setSelectedGame(value);
     setCurrentPage(1);
   };
 
-  // Calculate pagination for general ranking
   const totalPages = Math.ceil(playersSummary.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPlayers = playersSummary.slice(startIndex, endIndex);
 
-  // Calculate pagination for game-specific ranking
+
   const totalGamePages = Math.ceil(currentGameRanking.length / itemsPerPage);
   const gameStartIndex = (currentPage - 1) * itemsPerPage;
   const gameEndIndex = gameStartIndex + itemsPerPage;
   const currentGamePlayers = currentGameRanking.slice(gameStartIndex, gameEndIndex);
+
+  if (loading || !dashboardStats) {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -288,7 +339,7 @@ export default function DashboardPage() {
                         {currentGamePlayers.map((player) => {
                           const status = getGameStatusBadge(player.rank);
                           return (
-                            <TableRow key={player.name}>
+                            <TableRow key={`${player.user_id}-${player.game_id}`}>
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold">#{player.rank}</span>
@@ -301,16 +352,16 @@ export default function DashboardPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-lg">{player.avatar}</span>
+                                  <span className="text-lg">{player.avatar || '👤'}</span>
                                   <span className="font-medium">{player.name}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="font-bold">
-                                {player.score.toLocaleString()}
+                                {player.best_score.toLocaleString()}
                               </TableCell>
-                              <TableCell>{player.gamesPlayed}</TableCell>
+                              <TableCell>{player.games_played}</TableCell>
                               <TableCell>
-                                {Math.round(player.score / player.gamesPlayed).toLocaleString()}
+                                {player.games_played > 0 ? Math.round(player.best_score / player.games_played).toLocaleString() : '0'}
                               </TableCell>
                               <TableCell>
                                 <Badge variant={status.variant}>{status.text}</Badge>
@@ -321,7 +372,7 @@ export default function DashboardPage() {
                       </TableBody>
                     </Table>
 
-                    {/* Paginação do Ranking por Jogo */}
+                    {/* pagination */}
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-sm text-muted-foreground">
                         Mostrando {gameStartIndex + 1} a {Math.min(gameEndIndex, currentGameRanking.length)} de {currentGameRanking.length} jogadores
