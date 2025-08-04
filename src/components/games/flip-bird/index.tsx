@@ -135,10 +135,22 @@ export function FlipBird() {
   const gameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!gameRef.current) return;
+
+    let game: Phaser.Game | null = null;
+    let isGameDestroyed = false;
 
     const loadGame = async () => {
+      if (isGameDestroyed || !gameRef.current) return;
+
+    
+      if (gameRef.current) {
+        gameRef.current.innerHTML = '';
+      }
+
       const Phaser = await import('phaser');
 
+      if (isGameDestroyed || !gameRef.current) return;
 
       let gameOver = false;
       let gameStarted = false;
@@ -525,9 +537,13 @@ export function FlipBird() {
 
       const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
-        parent: gameRef.current!,
+        parent: gameRef.current,
         width: 288,
         height: 512,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH
+        },
         physics: {
           default: 'arcade',
           arcade: {
@@ -542,29 +558,30 @@ export function FlipBird() {
         }
       };
 
-      const game = new Phaser.Game(config);
-
-      return () => {
-        game.destroy(true);
-      };
+      if (!isGameDestroyed) {
+        game = new Phaser.Game(config);
+      }
     };
 
-    let cleanup: (() => void) | undefined;
-
-    loadGame().then((cleanupFn) => {
-      cleanup = cleanupFn;
+    loadGame().catch((error) => {
+      console.error('Error loading game:', error);
     });
 
     return () => {
-      if (cleanup) {
-        cleanup();
+      isGameDestroyed = true;
+      if (game) {
+        game.destroy(true);
+        game = null;
+      }
+      if (gameRef.current) {
+        gameRef.current.innerHTML = '';
       }
     };
   }, []);
 
   return (
-    <div className="game-container">
-      <div className="bg-card/95 backdrop-blur-sm p-6 rounded-xl shadow-2xl border border-border">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-card/95 backdrop-blur-sm p-6 rounded-xl shadow-2xl border border-border max-w-sm mx-auto">
         <div className="text-center mb-4">
           <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
             🐦 Flip Bird
@@ -573,7 +590,16 @@ export function FlipBird() {
             Clique para fazer o pássaro voar e desvie dos obstáculos!
           </p>
         </div>
-        <div ref={gameRef} className="border-2 border-primary/30 rounded-lg shadow-inner bg-background/50" />
+        <div
+          ref={gameRef}
+          className="border-2 border-primary/30 rounded-lg shadow-inner bg-background/50 mx-auto max-w-full"
+          style={{
+            width: '288px',
+            height: '512px',
+            maxHeight: '70vh',
+            aspectRatio: '288/512'
+          }}
+        />
         <div className="text-center mt-4">
           <p className="text-xs text-muted-foreground">
             Use <kbd className="px-2 py-1 bg-muted rounded text-muted-foreground font-mono text-xs">ESPAÇO</kbd> ou <kbd className="px-2 py-1 bg-muted rounded text-muted-foreground font-mono text-xs">CLIQUE</kbd> para jogar
