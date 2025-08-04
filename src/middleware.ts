@@ -10,17 +10,15 @@ import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-// Remover configuração de runtime - usar Edge Runtime padrão com fallbacks
+
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
-  // Verificar se as variáveis de ambiente estão disponíveis
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    // Durante o build, apenas prosseguir sem autenticação
     return NextResponse.next()
   }
 
@@ -56,26 +54,23 @@ export async function middleware(req: NextRequest) {
 
   const protectedRoutes = ['/dashboard', '/games', '/you']
   const adminRoutes = ['/dashboard']
+  const playerRoutes = ['/games', '/you']
   const authRoutes = ['/login', '/register']
   const { pathname } = req.nextUrl
 
-  // Primeira verificação: cookies de autenticação
   const authCookies = getAuthCookies(req)
   const hasValidCookies = authCookies !== null
   const isAuthenticatedViaCookies = isAuthenticatedFromCookies(req)
   const isAdminViaCookies = isAdminFromCookies(req)
 
-  // Se está tentando acessar rotas de auth estando logado (via cookies ou sessão)
   if (authRoutes.some(route => pathname.startsWith(route))) {
     if (hasValidCookies && authCookies) {
-      // Usa dados dos cookies para redirecionamento rápido
       if (authCookies.role === 'admin') {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       } else {
         return NextResponse.redirect(new URL('/games', req.url))
       }
     } else if (session) {
-      // Fallback: consulta banco se não há cookies válidos mas há sessão
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
@@ -83,7 +78,6 @@ export async function middleware(req: NextRequest) {
         .single()
 
       if (!error && user) {
-        // Salva dados nos cookies para próximas requisições
         setAuthCookies(res, {
           userId: user.id,
           role: user.role,
@@ -92,7 +86,6 @@ export async function middleware(req: NextRequest) {
           name: user.name
         })
 
-        // Redireciona baseado no role
         if (user.role === 'admin') {
           return NextResponse.redirect(new URL('/dashboard', req.url))
         } else {
@@ -102,17 +95,19 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Se está tentando acessar rota protegida
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    // Verifica primeiro pelos cookies (mais rápido)
     if (!isAuthenticatedViaCookies && !session) {
       clearAuthCookies(res)
       return NextResponse.redirect(new URL('/login', req.url))
     }
 
-    // Se há cookies válidos, permite acesso direto
     if (hasValidCookies) {
-      // Para rotas de admin, verifica se tem permissão
+      // Admin não pode acessar rotas de player
+      if (playerRoutes.some(route => pathname.startsWith(route)) && isAdminViaCookies) {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+
+      // Player não pode acessar rotas de admin
       if (adminRoutes.some(route => pathname.startsWith(route))) {
         if (!isAdminViaCookies) {
           return NextResponse.redirect(new URL('/games', req.url))
@@ -121,7 +116,6 @@ export async function middleware(req: NextRequest) {
       return res
     }
 
-    // Fallback: se não há cookies válidos mas há sessão, revalida
     if (session) {
       const { data: user, error } = await supabase
         .from('users')
@@ -134,7 +128,6 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL('/login', req.url))
       }
 
-      // Salva dados nos cookies para próximas requisições
       setAuthCookies(res, {
         userId: user.id,
         role: user.role,
@@ -143,14 +136,17 @@ export async function middleware(req: NextRequest) {
         name: user.name
       })
 
-      // Verifica permissões de admin
+      if (playerRoutes.some(route => pathname.startsWith(route)) && user.role === 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+
       if (adminRoutes.some(route => pathname.startsWith(route)) && user.role !== 'admin') {
         return NextResponse.redirect(new URL('/games', req.url))
       }
     }
   }
 
-  // Limpa cookies se não há sessão ativa
+
   if (!session && (req.cookies.has('auth-data') || req.cookies.has('user-role'))) {
     clearAuthCookies(res)
   }

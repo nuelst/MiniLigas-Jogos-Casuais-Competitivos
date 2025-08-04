@@ -22,6 +22,7 @@ function UserMenu({ user, onSignOut }: {
     name: string;
     email: string;
     avatar?: string | null;
+    role: 'admin' | 'player';
   };
   readonly onSignOut: () => void
 }) {
@@ -60,11 +61,19 @@ function UserMenu({ user, onSignOut }: {
                 <User size={16} />
                 <span>Perfil</span>
               </Link>
-              <Link href="/games" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
-                <Trophy size={16} />
-                <span>Meus Jogos</span>
-              </Link>
-              <Link href="#" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+              {user.role === 'player' && (
+                <Link href="/games" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+                  <Trophy size={16} />
+                  <span>Meus Jogos</span>
+                </Link>
+              )}
+              {user.role === 'admin' && (
+                <Link href="/dashboard" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+                  <Trophy size={16} />
+                  <span>Dashboard</span>
+                </Link>
+              )}
+              <Link href="/you" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
                 <Settings size={16} />
                 <span>Configurações</span>
               </Link>
@@ -84,7 +93,10 @@ function UserMenu({ user, onSignOut }: {
   );
 }
 
-function MobileMenu({ isAuthenticated }: { readonly isAuthenticated: boolean }) {
+function MobileMenu({ isAuthenticated, user }: {
+  readonly isAuthenticated: boolean;
+  readonly user?: { role: 'admin' | 'player' } | null;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -106,16 +118,40 @@ function MobileMenu({ isAuthenticated }: { readonly isAuthenticated: boolean }) 
           />
           <div className="absolute top-full left-4 right-4 mt-2 bg-card border border-border rounded-lg shadow-lg z-30 p-4">
             <nav className="space-y-4">
-              <a href="#jogos" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
-                Jogos
-              </a>
-              <a href="#rankings" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
-                Rankings
-              </a>
-              {!isAuthenticated && (
-                <Link href="/login" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
-                  Login
-                </Link>
+              {isAuthenticated ? (
+                <>
+                  {user?.role === 'admin' ? (
+                    <>
+                      <Link href="/dashboard" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                        Dashboard
+                      </Link>
+                      <Link href="/ranking" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                        Rankings
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/games" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                        Jogos
+                      </Link>
+                      <Link href="/ranking" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                        Rankings
+                      </Link>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <a href="#jogos" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                    Jogos
+                  </a>
+                  <a href="#rankings" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                    Rankings
+                  </a>
+                  <Link href="/login" className="block text-muted-foreground hover:text-foreground transition-colors" onClick={() => setIsOpen(false)}>
+                    Login
+                  </Link>
+                </>
               )}
             </nav>
           </div>
@@ -135,7 +171,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
 
           <div className="flex items-center space-x-4">
-            <MobileMenu isAuthenticated={isAuthenticated} />
+            <MobileMenu isAuthenticated={isAuthenticated} user={user} />
             <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <GamepadIcon className="h-8 w-8 text-primary" />
               <h1 className="text-xl md:text-2xl font-bold text-foreground">MiniLigas</h1>
@@ -144,12 +180,38 @@ export function Header() {
 
 
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#jogos" className="text-muted-foreground hover:text-foreground transition-colors">
-              Jogos
-            </a>
-            <a href="#rankings" className="text-muted-foreground hover:text-foreground transition-colors">
-              Rankings
-            </a>
+            {isAuthenticated ? (
+              <>
+                {user.role === 'admin' ? (
+                  <>
+                    <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Dashboard
+                    </Link>
+                    <Link href="/ranking" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Rankings
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/games" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Jogos
+                    </Link>
+                    <Link href="/ranking" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Rankings
+                    </Link>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <a href="#jogos" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Jogos
+                </a>
+                <a href="#rankings" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Rankings
+                </a>
+              </>
+            )}
           </nav>
 
 
@@ -158,7 +220,7 @@ export function Header() {
             <ThemeToggle />
 
             {isAuthenticated ? (
-              <UserMenu user={user!} onSignOut={signOut} />
+              <UserMenu user={user as any} onSignOut={signOut} />
             ) : (
               <Link
                 href="/login"
