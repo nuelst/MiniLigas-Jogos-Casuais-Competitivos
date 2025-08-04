@@ -56,7 +56,7 @@ function UserMenu({ user, onSignOut }: {
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
             <div className="p-1">
-              <Link href="/profile" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+              <Link href="/you" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
                 <User size={16} />
                 <span>Perfil</span>
               </Link>
@@ -64,7 +64,7 @@ function UserMenu({ user, onSignOut }: {
                 <Trophy size={16} />
                 <span>Meus Jogos</span>
               </Link>
-              <Link href="/settings" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+              <Link href="#" className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
                 <Settings size={16} />
                 <span>Configurações</span>
               </Link>
