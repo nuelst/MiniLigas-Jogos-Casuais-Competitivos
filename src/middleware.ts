@@ -2,7 +2,6 @@ import {
   clearAuthCookies,
   getAuthCookies,
   isAdminFromCookies,
-  isAuthenticatedFromCookies,
   setAuthCookies
 } from '@/lib/auth-cookies'
 import type { Database } from '@/types/database'
@@ -60,7 +59,6 @@ export async function middleware(req: NextRequest) {
 
   const authCookies = getAuthCookies(req)
   const hasValidCookies = authCookies !== null
-  const isAuthenticatedViaCookies = isAuthenticatedFromCookies(req)
   const isAdminViaCookies = isAdminFromCookies(req)
 
   if (authRoutes.some(route => pathname.startsWith(route))) {
@@ -96,18 +94,11 @@ export async function middleware(req: NextRequest) {
   }
 
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    if (!isAuthenticatedViaCookies && !session) {
-      clearAuthCookies(res)
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-
     if (hasValidCookies) {
-      // Admin não pode acessar rotas de player
       if (playerRoutes.some(route => pathname.startsWith(route)) && isAdminViaCookies) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
 
-      // Player não pode acessar rotas de admin
       if (adminRoutes.some(route => pathname.startsWith(route))) {
         if (!isAdminViaCookies) {
           return NextResponse.redirect(new URL('/games', req.url))
@@ -116,6 +107,7 @@ export async function middleware(req: NextRequest) {
       return res
     }
 
+    // Se não há cookies válidos, tenta usar sessão como backup
     if (session) {
       const { data: user, error } = await supabase
         .from('users')
@@ -143,7 +135,12 @@ export async function middleware(req: NextRequest) {
       if (adminRoutes.some(route => pathname.startsWith(route)) && user.role !== 'admin') {
         return NextResponse.redirect(new URL('/games', req.url))
       }
+
+      return res
     }
+
+    clearAuthCookies(res)
+    return NextResponse.redirect(new URL('/login', req.url))
   }
 
 
