@@ -2,11 +2,11 @@
 
 import type { GameInfo } from '@/lib/games-api';
 import { getGamesFromDB } from '@/lib/games-api';
-import { Play, Users } from 'lucide-react';
+import { LogIn, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-export default function GamesPage() {
+export default function PublicGamesPage() {
   const [games, setGames] = useState<GameInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +62,7 @@ export default function GamesPage() {
           🕹️ Jogos Disponíveis
         </h1>
         <p className="text-muted-foreground">
-          Escolha um jogo e divirta-se! Seus pontos serão salvos automaticamente.
+          Conheça nossos jogos! Faça login para jogar e salvar seus pontos.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export default function GamesPage() {
             className="bg-card/80 backdrop-blur-sm rounded-xl p-6 hover:bg-card transition-all transform hover:scale-105 border border-border shadow-lg"
           >
             <div className={`w-20 h-20 ${game.color} rounded-full flex items-center justify-center text-3xl mb-4 mx-auto`}>
-              {game.emoji}
+              {game.name.split(' ')[0]}
             </div>
             <h3 className="text-xl font-bold text-card-foreground mb-2 text-center">
               {game.name}
@@ -93,26 +93,41 @@ export default function GamesPage() {
             </div>
 
             <Link
-              href={`/games/${game.id}`}
+              href="/login"
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg font-semibold transition-colors flex items-center justify-center group"
             >
-              <Play className="h-4 w-4 mr-2 group-hover:translate-x-1 transition-transform" />
-              Jogar Agora
+              <LogIn className="h-4 w-4 mr-2 group-hover:translate-x-1 transition-transform" />
+              Faça Login para Jogar
             </Link>
           </div>
         ))}
       </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-muted-foreground mb-4">
-          Quer ver como está seu desempenho?
-        </p>
-        <Link
-          href="/ranking"
-          className="inline-flex items-center px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors"
-        >
-          🏆 Ver Rankings
-        </Link>
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">
+            Quer ver os melhores jogadores?
+          </p>
+          <Link
+            href="/ranking"
+            className="inline-flex items-center px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors"
+          >
+            🏆 Ver Rankings
+          </Link>
+        </div>
+
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">
+            Pronto para competir?
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <LogIn className="h-4 w-4 mr-2" />
+            Fazer Login
+          </Link>
+        </div>
       </div>
     </div>
   );
