@@ -6,14 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ThemeToggle from "../theme-toggle";
 
-const useAuth = () => {
-  const [user] = useState<{ name: string; email: string; avatar?: string } | null>(
-
-    { name: "João Silva", email: "joao@miniligas.com" }
-  );
-
-  return { user, isAuthenticated: !!user };
-};
+import { useAuthStore } from "@/store/auth";
 
 function Avatar({ children, className = "" }: { readonly children: React.ReactNode; readonly className?: string }) {
   return (
@@ -24,7 +17,14 @@ function Avatar({ children, className = "" }: { readonly children: React.ReactNo
 }
 
 
-function UserMenu({ user }: { readonly user: { name: string; email: string; avatar?: string } }) {
+function UserMenu({ user, onSignOut }: {
+  readonly user: {
+    name: string;
+    email: string;
+    avatar?: string | null;
+  };
+  readonly onSignOut: () => void
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -69,7 +69,10 @@ function UserMenu({ user }: { readonly user: { name: string; email: string; avat
                 <span>Configurações</span>
               </Link>
               <hr className="my-1 border-border" />
-              <button className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+              <button
+                onClick={onSignOut}
+                className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+              >
                 <LogOut size={16} />
                 <span>Sair</span>
               </button>
@@ -123,7 +126,8 @@ function MobileMenu({ isAuthenticated }: { readonly isAuthenticated: boolean }) 
 }
 
 export function Header() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, signOut } = useAuthStore();
+  const isAuthenticated = !!user;
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
@@ -154,7 +158,7 @@ export function Header() {
             <ThemeToggle />
 
             {isAuthenticated ? (
-              <UserMenu user={user!} />
+              <UserMenu user={user!} onSignOut={signOut} />
             ) : (
               <Link
                 href="/login"
