@@ -3,8 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-// Configurar para usar Node.js runtime ao invés de Edge Runtime
-export const runtime = 'nodejs'
+// Remover configuração de runtime - usar Edge Runtime padrão com fallbacks
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
