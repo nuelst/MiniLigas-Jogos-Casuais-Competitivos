@@ -3,7 +3,7 @@
 import { loginSchema, type LoginData } from '@/lib/validations';
 import { useAuthStore } from '@/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, ArrowLeft, KeyRound, Loader2, LogIn, User } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Eye, EyeOff, KeyRound, Loader2, LogIn, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -89,7 +89,7 @@ export function LoginForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showPassword ? '🙈' : '👁️'}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
           {errors.password && (
