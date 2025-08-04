@@ -3,7 +3,7 @@ import type { DashboardStats, GameStats, PlayerSummary } from '@/types/dashboard
 
 
 export async function getDashboardStatsFromDB(): Promise<DashboardStats> {
-  // Retornar stats vazias durante build se Supabase não estiver configurado
+
   if (!isSupabaseConfigured()) {
     return {
       totalPlayers: 0,
@@ -73,7 +73,6 @@ export async function getDashboardStatsFromDB(): Promise<DashboardStats> {
 
 
 export async function getGameStatsFromDB(): Promise<GameStats[]> {
-  // Retornar array vazio durante build se Supabase não estiver configurado
   if (!isSupabaseConfigured()) {
     return []
   }
@@ -139,7 +138,7 @@ export async function getGameStatsFromDB(): Promise<GameStats[]> {
 
 
 export async function getPlayersSummaryFromDB(): Promise<PlayerSummary[]> {
-  // Retornar array vazio durante build se Supabase não estiver configurado
+
   if (!isSupabaseConfigured()) {
     return []
   }

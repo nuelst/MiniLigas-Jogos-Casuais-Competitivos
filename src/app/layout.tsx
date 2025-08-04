@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/components/auth-provider";
+import { InactivityProvider } from "@/components/inactivity-provider";
 import { Header } from "@/components/landing-page/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
@@ -38,8 +39,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Header />
-            {children}
+            <InactivityProvider>
+              <Header />
+              {children}
+            </InactivityProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
