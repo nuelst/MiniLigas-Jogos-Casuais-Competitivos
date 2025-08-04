@@ -1,5 +1,7 @@
 # 🎮 Desafio Técnico Frontend – MiniLigas: Jogos Casuais Competitivos
 
+> 📖 **[Ver documentação técnica completa →](./ABOUT.md)**
+
 ## 🎯 Objetivo
 
 Crie uma plataforma de jogos casuais curtos e interativos onde jogadores possam competir por pontuações em tempo real, visualizar rankings e interagir com uma interface divertida e intuitiva. A aplicação deve ser construída com **React.js (Next.js, Vite ou Gatsby)** e oferecer uma experiência fluida e responsiva.
@@ -115,6 +117,43 @@ Crie uma plataforma de jogos casuais curtos e interativos onde jogadores possam 
   - Instruções de instalação e execução
   - Link para o design base
 - Link de deploy (opcional, mas recomendado)
+
+## 🚀 Executar o Projeto
+
+### Pré-requisitos
+- Node.js 18+ 
+- npm ou yarn
+- Conta no Supabase (para backend)
+
+### Instalação
+```bash
+# Clone o repositório
+git clone [seu-repo]
+cd front-end
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+cp .env.local.example .env.local
+# Edite .env.local com suas credenciais do Supabase
+
+# Execute em modo desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+npm start
+```
+
+### Scripts Disponíveis
+- `npm run dev` - Desenvolvimento com hot reload
+- `npm run build` - Build otimizado para produção  
+- `npm run start` - Executa build de produção
+- `npm run lint` - Verifica código com ESLint
+
+### Estrutura do Banco (seed.sql)
+Execute o arquivo `seed.sql` no seu Supabase para criar as tabelas necessárias.
 
 ---
 
