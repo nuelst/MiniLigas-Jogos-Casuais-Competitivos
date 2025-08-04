@@ -1,7 +1,9 @@
 "use client"
 
-import { getGameStats } from "@/shared/utils/dashboard"
+import { getGameStatsFromDB } from "@/lib/dashboard-api"
+import type { GameStats } from "@/types/dashboard"
 import { TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
 import { Pie, PieChart } from "recharts"
 
 import {
@@ -91,14 +93,31 @@ function CustomTooltip({ active, payload }: TooltipProps) {
 }
 
 export function GamesDistributionChart() {
-  const gameStats = getGameStats()
+  const [gameStats, setGameStats] = useState<GameStats[]>([])
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const stats = await getGameStatsFromDB()
+        setGameStats(stats)
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas dos jogos:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   const colorMap = {
     "car-racing": "var(--chart-1)",
     "flip-bird": "var(--chart-2)",
     "uno-game": "var(--chart-3)",
     "rock-paper-scissors": "var(--chart-4)",
+    "jokenpo-game": "var(--chart-5)",
+    "dino-game": "var(--chart-6)",
   } as const
 
   const totalPlayers = gameStats.reduce((sum, game) => sum + game.totalPlayers, 0);
@@ -111,8 +130,24 @@ export function GamesDistributionChart() {
     emoji: game.emoji,
     totalPlayers: totalPlayers, // Para cálculo de porcentagem no tooltip
     totalGames: game.totalGames, // Total de partidas do jogo
-    percentage: ((game.totalPlayers / totalPlayers) * 100).toFixed(1)
+    percentage: totalPlayers > 0 ? ((game.totalPlayers / totalPlayers) * 100).toFixed(1) : '0'
   }))
+
+  if (loading) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle>Distribuição de Jogadores</CardTitle>
+          <CardDescription>Carregando dados...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 pb-0">
+          <div className="mx-auto aspect-square max-h-[300px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="flex flex-col">
