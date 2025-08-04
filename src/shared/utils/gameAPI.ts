@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { submitScoreSchema } from "@/lib/validations"
 
 export async function submitScore(gameId: string, score: number, duration: number) {
@@ -71,6 +71,10 @@ export function getMinDurationForScore(gameId: string, score: number): number {
  * Busca rankings de um jogo específico ou geral
  */
 export async function getRankings(gameId?: string, limit: number = 10) {
+  // Retornar array vazio durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return []
+  }
   let query = supabase
     .from('rankings')
     .select('*')
@@ -91,6 +95,10 @@ export async function getRankings(gameId?: string, limit: number = 10) {
  * Busca estatísticas de um usuário
  */
 export async function getUserStats(userId: string) {
+  // Retornar array vazio durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return []
+  }
   const { data, error } = await supabase
     .from('game_sessions')
     .select(`

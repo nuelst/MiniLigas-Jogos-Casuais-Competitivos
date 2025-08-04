@@ -3,12 +3,24 @@ import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
+// Configurar para usar Node.js runtime ao invés de Edge Runtime
+export const runtime = 'nodejs'
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
+  // Verificar se as variáveis de ambiente estão disponíveis
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    // Durante o build, apenas prosseguir sem autenticação
+    return NextResponse.next()
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
