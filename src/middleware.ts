@@ -1,19 +1,24 @@
+import {
+  clearAuthCookies,
+  getAuthCookies,
+  isAdminFromCookies,
+  isAuthenticatedFromCookies,
+  setAuthCookies
+} from '@/lib/auth-cookies'
 import type { Database } from '@/types/database'
 import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-// Remover configuração de runtime - usar Edge Runtime padrão com fallbacks
+
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
-  // Verificar se as variáveis de ambiente estão disponíveis
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    // Durante o build, apenas prosseguir sem autenticação
     return NextResponse.next()
   }
 
@@ -49,78 +54,101 @@ export async function middleware(req: NextRequest) {
 
   const protectedRoutes = ['/dashboard', '/games', '/you']
   const adminRoutes = ['/dashboard']
+  const playerRoutes = ['/games', '/you']
   const authRoutes = ['/login', '/register']
   const { pathname } = req.nextUrl
 
-  // Se está tentando acessar rotas de auth estando logado, redireciona baseado no role
-  if (authRoutes.some(route => pathname.startsWith(route)) && session) {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
+  const authCookies = getAuthCookies(req)
+  const hasValidCookies = authCookies !== null
+  const isAuthenticatedViaCookies = isAuthenticatedFromCookies(req)
+  const isAdminViaCookies = isAdminFromCookies(req)
 
-    if (!error && user) {
-      // Salva informações básicas do usuário nos cookies
-      res.cookies.set('user-role', user.role, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 dias
-      })
-
-      // Redireciona baseado no role
-      if (user.role === 'admin') {
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    if (hasValidCookies && authCookies) {
+      if (authCookies.role === 'admin') {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       } else {
         return NextResponse.redirect(new URL('/games', req.url))
       }
+    } else if (session) {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!error && user) {
+        setAuthCookies(res, {
+          userId: user.id,
+          role: user.role,
+          email: user.email,
+          username: user.username,
+          name: user.name
+        })
+
+        if (user.role === 'admin') {
+          return NextResponse.redirect(new URL('/dashboard', req.url))
+        } else {
+          return NextResponse.redirect(new URL('/games', req.url))
+        }
+      }
+    }
+  }
+
+  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+    if (!isAuthenticatedViaCookies && !session) {
+      clearAuthCookies(res)
+      return NextResponse.redirect(new URL('/login', req.url))
     }
 
-    // Fallback se houver erro ao buscar usuário
-    return NextResponse.redirect(new URL('/games', req.url))
-  }
+    if (hasValidCookies) {
+      // Admin não pode acessar rotas de player
+      if (playerRoutes.some(route => pathname.startsWith(route)) && isAdminViaCookies) {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
 
-  // Se está tentando acessar rota protegida sem estar logado
-  if (protectedRoutes.some(route => pathname.startsWith(route)) && !session) {
-    return NextResponse.redirect(new URL('/login', req.url))
-  }
-
-  // Verificação específica para rotas de admin
-  if (adminRoutes.some(route => pathname.startsWith(route)) && session) {
-    // Primeiro verifica se já temos o role no cookie
-    const userRole = req.cookies.get('user-role')?.value
-
-    if (userRole === 'admin') {
-      // Se já sabemos que é admin, permite o acesso
+      // Player não pode acessar rotas de admin
+      if (adminRoutes.some(route => pathname.startsWith(route))) {
+        if (!isAdminViaCookies) {
+          return NextResponse.redirect(new URL('/games', req.url))
+        }
+      }
       return res
     }
 
-    // Se não temos o role no cookie ou não é admin, consulta o banco
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
+    if (session) {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
 
-    if (error || !user || user.role !== 'admin') {
-      // Remove cookie incorreto se existir
-      res.cookies.delete('user-role')
-      return NextResponse.redirect(new URL('/games', req.url))
+      if (error || !user) {
+        clearAuthCookies(res)
+        return NextResponse.redirect(new URL('/login', req.url))
+      }
+
+      setAuthCookies(res, {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+        username: user.username,
+        name: user.name
+      })
+
+      if (playerRoutes.some(route => pathname.startsWith(route)) && user.role === 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+
+      if (adminRoutes.some(route => pathname.startsWith(route)) && user.role !== 'admin') {
+        return NextResponse.redirect(new URL('/games', req.url))
+      }
     }
-
-    // Atualiza o cookie com a informação correta
-    res.cookies.set('user-role', user.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
-    })
   }
 
-  // Limpa cookies de role se não há sessão ativa
-  if (!session && req.cookies.get('user-role')) {
-    res.cookies.delete('user-role')
+
+  if (!session && (req.cookies.has('auth-data') || req.cookies.has('user-role'))) {
+    clearAuthCookies(res)
   }
 
   return res

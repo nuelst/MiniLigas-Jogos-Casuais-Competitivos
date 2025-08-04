@@ -137,7 +137,6 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
 }
 
 export async function getGlobalStats(): Promise<GlobalStats> {
-  // Retornar stats vazias durante build se Supabase não estiver configurado
   if (!isSupabaseConfigured()) {
     return {
       totalPlayers: 0,
@@ -173,7 +172,6 @@ export async function getGlobalStats(): Promise<GlobalStats> {
 }
 
 export async function getGlobalRankings(): Promise<Record<string, Ranking[]>> {
-  // Retornar rankings vazios durante build se Supabase não estiver configurado
   if (!isSupabaseConfigured()) {
     return {}
   }
