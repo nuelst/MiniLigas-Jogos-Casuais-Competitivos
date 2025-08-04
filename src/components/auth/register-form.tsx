@@ -3,11 +3,12 @@
 import { registerSchema, type RegisterData } from '@/lib/validations';
 import { useAuthStore } from '@/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, ArrowLeft, CheckCircle, KeyRound, Loader2, Mail, User, UserPlus, Users } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle, Eye, EyeOff, KeyRound, Loader2, Mail, User, UserPlus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -37,6 +38,10 @@ export function RegisterForm() {
 
     if (result.success) {
       setSuccess(true);
+      toast.success('Conta criada com sucesso!', {
+        description: 'Verifique seu email para confirmar sua conta e fazer login.',
+        duration: 5000,
+      });
       // Redirecionar para página de confirmação de email ou login
       setTimeout(() => {
         router.push('/login');
@@ -74,7 +79,7 @@ export function RegisterForm() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Nome Completo */}
+
         <div>
           <label htmlFor="name" className="block text-foreground font-medium mb-2">
             Nome Completo
@@ -120,7 +125,6 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Email */}
         <div>
           <label htmlFor="email" className="block text-foreground font-medium mb-2">
             Email
@@ -143,7 +147,7 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Senha */}
+
         <div>
           <label htmlFor="password" className="block text-foreground font-medium mb-2">
             Senha
@@ -165,7 +169,7 @@ export function RegisterForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showPassword ? '🙈' : '👁️'}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
           {errors.password && (
@@ -173,7 +177,7 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Botão de Submit */}
+
         <button
           type="submit"
           disabled={isSubmitting || loading}
@@ -193,7 +197,6 @@ export function RegisterForm() {
         </button>
       </form>
 
-      {/* Links de navegação */}
       <div className="mt-6 text-center">
         <p className="text-muted-foreground mb-4">
           Já tem uma conta?{' '}
