@@ -1,7 +1,5 @@
-import { CarRacingGame } from "@/components/games/car-racing";
+import { BuildingGame } from "@/components/games/building-game";
 import { FlipBird } from "@/components/games/flip-bird";
-import { JokenpoGame } from "@/components/games/jokenpo-game";
-import { UnoGame } from "@/components/games/uno-game";
 import { notFound } from 'next/navigation';
 import { use } from "react";
 
@@ -14,9 +12,9 @@ type GamePageProps = {
 const GAMES = {
   'flip-bird': FlipBird,
 
-  'jokenpo-game': JokenpoGame,
-  'uno-game': UnoGame,
-  'car-racing': CarRacingGame,
+  'jokenpo-game': BuildingGame,
+  'uno-game': BuildingGame,
+  'car-racing': BuildingGame,
 }
 
 export default function GamePage({ params }: GamePageProps) {

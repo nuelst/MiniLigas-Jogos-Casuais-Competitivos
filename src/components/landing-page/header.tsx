@@ -1,15 +1,15 @@
 "use client";
 
-import ThemeToggle from "@/components/navbar-components/theme-toggle";
 import { GamepadIcon, LogOut, Menu, Play, Settings, Trophy, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import ThemeToggle from "../theme-toggle";
 
 const useAuth = () => {
   const [user] = useState<{ name: string; email: string; avatar?: string } | null>(
 
-    { name: "João Silva", email: "joao@miniligas.com" } // Usuário logado (para teste)
+    { name: "João Silva", email: "joao@miniligas.com" }
   );
 
   return { user, isAuthenticated: !!user };
@@ -80,7 +80,6 @@ function UserMenu({ user }: { readonly user: { name: string; email: string; avat
     </div>
   );
 }
-
 
 function MobileMenu({ isAuthenticated }: { readonly isAuthenticated: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -153,7 +152,6 @@ export function Header() {
           <div className="flex items-center space-x-2">
 
             <ThemeToggle />
-
 
             {isAuthenticated ? (
               <UserMenu user={user!} />

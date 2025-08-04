@@ -563,13 +563,22 @@ export function FlipBird() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="bg-cyan-400 p-4 rounded-lg shadow-2xl">
-        <div className="text-center mt-4 text-white">
-          <h2 className="text-xl font-bold mb-2">Flip Bird</h2>
-          <p className="text-sm">Clique para fazer o pássaro voar!</p>
+    <div className="game-container">
+      <div className="bg-card/95 backdrop-blur-sm p-6 rounded-xl shadow-2xl border border-border">
+        <div className="text-center mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">
+            🐦 Flip Bird
+          </h2>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Clique para fazer o pássaro voar e desvie dos obstáculos!
+          </p>
         </div>
-        <div ref={gameRef} className="border-2 border-white rounded" />
+        <div ref={gameRef} className="border-2 border-primary/30 rounded-lg shadow-inner bg-background/50" />
+        <div className="text-center mt-4">
+          <p className="text-xs text-muted-foreground">
+            Use <kbd className="px-2 py-1 bg-muted rounded text-muted-foreground font-mono text-xs">ESPAÇO</kbd> ou <kbd className="px-2 py-1 bg-muted rounded text-muted-foreground font-mono text-xs">CLIQUE</kbd> para jogar
+          </p>
+        </div>
       </div>
     </div>
   );
