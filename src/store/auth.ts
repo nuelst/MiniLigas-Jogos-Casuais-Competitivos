@@ -1,3 +1,4 @@
+import { clearAuthCookiesClient, setAuthCookiesClient } from '@/lib/auth-cookies'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@/types/database'
 import type { AuthError, Session } from '@supabase/supabase-js'
@@ -62,6 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password: password,
       })
 
+      console.log("data-auth", data)
       if (error) {
         set({ loading: false, error: getAuthErrorMessage(error) })
         return { success: false, error: getAuthErrorMessage(error) }
@@ -79,6 +81,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ loading: false, error: 'Erro ao carregar perfil do usuário' })
           return { success: false, error: 'Erro ao carregar perfil do usuário' }
         }
+
+        // Salva dados nos cookies para uso no middleware
+        setAuthCookiesClient({
+          userId: fullUser.id,
+          role: fullUser.role,
+          email: fullUser.email,
+          username: fullUser.username,
+          name: fullUser.name
+        })
 
         set({
           user: fullUser,
@@ -149,10 +160,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true })
     await supabase.auth.signOut()
 
-    // Limpa cookie de role se existir
-    if (typeof document !== 'undefined') {
-      document.cookie = 'user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-    }
+    // Limpa todos os cookies de autenticação
+    clearAuthCookiesClient()
 
     set({
       user: null,
@@ -178,6 +187,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .single()
 
         if (!error && user) {
+          // Salva dados nos cookies para uso no middleware
+          setAuthCookiesClient({
+            userId: user.id,
+            role: user.role,
+            email: user.email,
+            username: user.username,
+            name: user.name
+          })
+
           set({
             user,
             session,
@@ -224,6 +242,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             .single()
 
           if (!error && user) {
+            // Atualiza cookies no onAuthStateChange
+            setAuthCookiesClient({
+              userId: user.id,
+              role: user.role,
+              email: user.email,
+              username: user.username,
+              name: user.name
+            })
+
             set({
               user,
               session,

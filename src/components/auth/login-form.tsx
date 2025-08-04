@@ -28,12 +28,8 @@ export function LoginForm() {
     const result = await signIn(data.emailOrUsername, data.password);
 
     if (result.success) {
-      // Redirecciona baseado no role do usuário
-      if (result.user?.role === 'admin') {
-        router.push('/dashboard');
-      } else {
-        router.push('/games');
-      }
+
+      router.push('/');
     } else {
       setError('root', { message: result.error });
     }
