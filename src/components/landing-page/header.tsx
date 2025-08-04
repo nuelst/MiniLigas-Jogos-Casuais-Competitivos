@@ -219,8 +219,8 @@ export function Header() {
 
             <ThemeToggle />
 
-            {isAuthenticated ? (
-              <UserMenu user={user as any} onSignOut={signOut} />
+            {isAuthenticated && user ? (
+              <UserMenu user={user} onSignOut={signOut} />
             ) : (
               <Link
                 href="/login"
