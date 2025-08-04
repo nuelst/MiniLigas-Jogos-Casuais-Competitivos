@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import type { Ranking } from '@/types/database'
 
 export interface GameInfo {
@@ -26,6 +26,32 @@ export interface GlobalStats {
 }
 
 export async function getGamesFromDB(): Promise<GameInfo[]> {
+  // Retornar dados mockados durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return [
+      {
+        id: 'flip-bird',
+        name: '🐦 Flip Bird',
+        description: 'Mantenha o pássaro no ar desviando de obstáculos',
+        emoji: '🐦',
+        difficulty: 'Fácil',
+        players: 0,
+        color: 'bg-green-500',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'car-racing',
+        name: '🚗 Car Racing',
+        description: 'Controle um carro e desvie de obstáculos em uma pista infinita',
+        emoji: '🚗',
+        difficulty: 'Médio',
+        players: 0,
+        color: 'bg-blue-500',
+        created_at: new Date().toISOString()
+      }
+    ]
+  }
+
   try {
     const { data: games, error } = await supabase
       .from('games')
@@ -68,6 +94,11 @@ export async function getGamesFromDB(): Promise<GameInfo[]> {
 }
 
 export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
+  // Retornar array vazio durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return []
+  }
+
   try {
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -106,6 +137,15 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
 }
 
 export async function getGlobalStats(): Promise<GlobalStats> {
+  // Retornar stats vazias durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return {
+      totalPlayers: 0,
+      totalGames: 0,
+      totalSessions: 0
+    }
+  }
+
   try {
     const [
       { count: totalPlayers },
@@ -133,6 +173,11 @@ export async function getGlobalStats(): Promise<GlobalStats> {
 }
 
 export async function getGlobalRankings(): Promise<Record<string, Ranking[]>> {
+  // Retornar rankings vazios durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return {}
+  }
+
   try {
     const { data: games } = await supabase
       .from('games')

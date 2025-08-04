@@ -1,8 +1,23 @@
-import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import type { DashboardStats, GameStats, PlayerSummary } from '@/types/dashboard'
 
 
 export async function getDashboardStatsFromDB(): Promise<DashboardStats> {
+  // Retornar stats vazias durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return {
+      totalPlayers: 0,
+      totalGames: 0,
+      activeGames: 0,
+      topPlayerOverall: {
+        name: 'N/A',
+        avatar: '👤',
+        totalScore: 0,
+        gamesPlayed: 0,
+      }
+    }
+  }
+
   try {
 
     const { count: totalPlayers } = await supabase
@@ -58,6 +73,11 @@ export async function getDashboardStatsFromDB(): Promise<DashboardStats> {
 
 
 export async function getGameStatsFromDB(): Promise<GameStats[]> {
+  // Retornar array vazio durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return []
+  }
+
   try {
     const { data: games } = await supabase
       .from('games')
@@ -119,6 +139,11 @@ export async function getGameStatsFromDB(): Promise<GameStats[]> {
 
 
 export async function getPlayersSummaryFromDB(): Promise<PlayerSummary[]> {
+  // Retornar array vazio durante build se Supabase não estiver configurado
+  if (!isSupabaseConfigured()) {
+    return []
+  }
+
   try {
     const { data: rankings } = await supabase
       .from('rankings')
