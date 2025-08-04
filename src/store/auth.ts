@@ -8,9 +8,10 @@ interface AuthState {
   session: Session | null
   loading: boolean
   error: string | null
+  isAdmin: boolean
+  isPlayer: boolean
 
-
-  signIn: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signIn: (username: string, password: string) => Promise<{ success: boolean; error?: string; user?: User | null }>
   signUp: (data: {
     email: string
     password: string
@@ -20,13 +21,16 @@ interface AuthState {
   signOut: () => Promise<void>
   initialize: () => Promise<void>
   clearError: () => void
+  getUserRole: () => 'admin' | 'player' | null
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   loading: true,
   error: null,
+  isAdmin: false,
+  isPlayer: false,
 
   signIn: async (emailOrUsername: string, password: string) => {
     set({ loading: true, error: null })
@@ -80,9 +84,11 @@ export const useAuthStore = create<AuthState>((set) => ({
           user: fullUser,
           session: data.session,
           loading: false,
-          error: null
+          error: null,
+          isAdmin: fullUser.role === 'admin',
+          isPlayer: fullUser.role === 'player'
         })
-        return { success: true }
+        return { success: true, user: fullUser }
       }
 
       set({ loading: false, error: 'Erro desconhecido ao fazer login' })
@@ -142,7 +148,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   signOut: async () => {
     set({ loading: true })
     await supabase.auth.signOut()
-    set({ user: null, session: null, loading: false, error: null })
+
+    // Limpa cookie de role se existir
+    if (typeof document !== 'undefined') {
+      document.cookie = 'user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+    }
+
+    set({
+      user: null,
+      session: null,
+      loading: false,
+      error: null,
+      isAdmin: false,
+      isPlayer: false
+    })
   },
 
   initialize: async () => {
@@ -159,17 +178,44 @@ export const useAuthStore = create<AuthState>((set) => ({
           .single()
 
         if (!error && user) {
-          set({ user, session, loading: false, error: null })
+          set({
+            user,
+            session,
+            loading: false,
+            error: null,
+            isAdmin: user.role === 'admin',
+            isPlayer: user.role === 'player'
+          })
         } else {
-          set({ user: null, session: null, loading: false, error: null })
+          set({
+            user: null,
+            session: null,
+            loading: false,
+            error: null,
+            isAdmin: false,
+            isPlayer: false
+          })
         }
       } else {
-        set({ user: null, session: null, loading: false, error: null })
+        set({
+          user: null,
+          session: null,
+          loading: false,
+          error: null,
+          isAdmin: false,
+          isPlayer: false
+        })
       }
 
       supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
-          set({ user: null, session: null, loading: false })
+          set({
+            user: null,
+            session: null,
+            loading: false,
+            isAdmin: false,
+            isPlayer: false
+          })
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           const { data: user, error } = await supabase
             .from('users')
@@ -178,17 +224,36 @@ export const useAuthStore = create<AuthState>((set) => ({
             .single()
 
           if (!error && user) {
-            set({ user, session, loading: false, error: null })
+            set({
+              user,
+              session,
+              loading: false,
+              error: null,
+              isAdmin: user.role === 'admin',
+              isPlayer: user.role === 'player'
+            })
           }
         }
       })
     } catch (err) {
       console.error('Erro ao inicializar auth:', err)
-      set({ user: null, session: null, loading: false, error: null })
+      set({
+        user: null,
+        session: null,
+        loading: false,
+        error: null,
+        isAdmin: false,
+        isPlayer: false
+      })
     }
   },
 
   clearError: () => set({ error: null }),
+
+  getUserRole: () => {
+    const { user } = get()
+    return user?.role || null
+  },
 }))
 
 

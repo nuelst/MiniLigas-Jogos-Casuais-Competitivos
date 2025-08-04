@@ -37,16 +37,37 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   const protectedRoutes = ['/dashboard', '/games', '/you']
-
   const adminRoutes = ['/dashboard']
-
   const authRoutes = ['/login', '/register']
-
   const { pathname } = req.nextUrl
 
-
+  // Se está tentando acessar rotas de auth estando logado, redireciona baseado no role
   if (authRoutes.some(route => pathname.startsWith(route)) && session) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+
+    if (!error && user) {
+      // Salva informações básicas do usuário nos cookies
+      res.cookies.set('user-role', user.role, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 dias
+      })
+
+      // Redireciona baseado no role
+      if (user.role === 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      } else {
+        return NextResponse.redirect(new URL('/games', req.url))
+      }
+    }
+
+    // Fallback se houver erro ao buscar usuário
+    return NextResponse.redirect(new URL('/games', req.url))
   }
 
   // Se está tentando acessar rota protegida sem estar logado
@@ -54,8 +75,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
+  // Verificação específica para rotas de admin
   if (adminRoutes.some(route => pathname.startsWith(route)) && session) {
+    // Primeiro verifica se já temos o role no cookie
+    const userRole = req.cookies.get('user-role')?.value
 
+    if (userRole === 'admin') {
+      // Se já sabemos que é admin, permite o acesso
+      return res
+    }
+
+    // Se não temos o role no cookie ou não é admin, consulta o banco
     const { data: user, error } = await supabase
       .from('users')
       .select('role')
@@ -63,8 +93,23 @@ export async function middleware(req: NextRequest) {
       .single()
 
     if (error || !user || user.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', req.url))
+      // Remove cookie incorreto se existir
+      res.cookies.delete('user-role')
+      return NextResponse.redirect(new URL('/games', req.url))
     }
+
+    // Atualiza o cookie com a informação correta
+    res.cookies.set('user-role', user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 dias
+    })
+  }
+
+  // Limpa cookies de role se não há sessão ativa
+  if (!session && req.cookies.get('user-role')) {
+    res.cookies.delete('user-role')
   }
 
   return res
